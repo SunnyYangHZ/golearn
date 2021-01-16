@@ -370,3 +370,185 @@ func main() {
 }
 ```
 
+# 3.常量
+
+## 3.1 定义
+
+在go语言语法中，常量表示固定的值。如：6,7,5.6，"hello world"，等。
+
+```go
+var a int=5
+var b string="hello world"
+```
+
+在上述代码中，变量a，b分别被赋值常量5，“hello world”。关键字const被用于表示常量。
+
+```go
+package mian
+func main(){
+    const a=5
+    a=89 //不能重新赋值
+}
+```
+
+同时不能将函数的返回值赋值给常量。
+
+```go
+package main
+import(
+	"fmt"
+	"math"
+)
+func main(){
+    fmt.Println("hello world")
+    var a=math.Sqrt(4)//可以
+    const b=math.Sqrt(4)//不可以
+}
+```
+
+## 3.2 字符串常量
+
+双引号中的任何值都是 Go 中的字符串常量。例如像 `Hello World` 或 `Sam` 等字符串在 Go 中都是常量。什么类型的字符串属于常量？答案是他们是无类型的。像hello world 这样的字符串常量没有任何类型。
+
+```go
+const hello="hello world"
+```
+
+上述的hello常量没有类型。
+
+在go语言中，所有的变量必须有明确的类型。如何将无类型的常量赋值给变量呢。
+
+```go
+package main
+import(
+	"fmt"
+)
+func main(){
+    var name="sam"
+    fmt.Printf("type %T value %v",name,name)
+}
+
+```
+
+表明无类型的常量有一个与他们相关联的默认类型，并且当且仅当一行代码需要时才提供他，在声明中 var name="sam",name需要一个类型，它从字符串常量sam的默认类型中获取。
+
+可以通过以下方式创建一个有类型常量。
+
+```go
+const typedhello string="hello world"
+```
+
+上述代码中，typedhello就是一个string类型的常量。
+
+同时，go语言规定，在分配过程中混合类型是不允许的。
+
+```go
+package main
+func main(){
+var defaultName="sam"//允许
+type mystring string
+var customName mystring="sam"//允许
+customName=defaultName//不允许
+}
+```
+
+在上述代码中，我们首先创建一个变量defaultName并分配一个常量sam，常量sam的默认类型是string，所以在赋值后defaultName的类型是string。
+
+之后，我们创建了一个新类型mystring，底层是string。同时我们创建了一个mystring的变量customName，并赋值sam，此时customName的类型是mystring。
+
+现在我们我们将defaultName赋值给customName是不被允许的。
+
+## 3.3 布尔常量
+
+布尔常量和字符串常量没有什么不同。他们是两个无类型的常量 `true` 和 `false`。字符串常量的规则适用于布尔常量，所以在这里我们不再重复。以下是解释布尔常量的简单程序。
+
+```go
+package main
+
+func main() {  
+    const trueConst = true
+    type myBool bool
+    var defaultBool = trueConst // 允许
+    var customBool myBool = trueConst // 允许
+    defaultBool = customBool // 不允许
+}
+```
+
+## 3.4 数字常量
+
+数字常量包含整数、浮点数和复数的常量。
+
+```go
+package main
+
+import (  
+    "fmt"
+)
+
+func main() {  
+    const a = 5
+    var intVar int = a
+    var int32Var int32 = a
+    var float64Var float64 = a
+    var complex64Var complex64 = a
+    fmt.Println("intVar",intVar, "\nint32Var", int32Var, "\nfloat64Var", float64Var, "\ncomplex64Var",complex64Var)
+}
+```
+
+上面的程序，常量 `a` 是没有类型的，它的值是 `5` 。您可能想知道 `a` 的默认类型是什么，如果它确实有一个的话, 那么我们如何将它分配给不同类型的变量。答案在于 `a` 的语法。下面的程序将使事情更加清晰。
+
+```go
+package main
+
+import (  
+    "fmt"
+)
+
+func main() {  
+    var i = 5
+    var f = 5.6
+    var c = 5 + 6i
+    fmt.Printf("i's type %T, f's type %T, c's type %T", i, f, c)
+
+}
+```
+
+在上面的程序中，每个变量的类型由数字常量的语法决定。`5` 在语法中是整数， `5.6` 是浮点数，`5+6i` 的语法是复数。当我们运行上面的程序，它会打印出 `i's type int, f's type float64, c's type complex128`。
+
+```go
+package main
+
+import (  
+    "fmt"
+)
+
+func main() {  
+    const a = 5
+    var intVar int = a
+    var int32Var int32 = a
+    var float64Var float64 = a
+    var complex64Var complex64 = a
+    fmt.Println("intVar",intVar, "\nint32Var", int32Var, "\nfloat64Var", float64Var, "\ncomplex64Var",complex64Var)
+}
+```
+
+在这个程序中， `a` 的值是 `5` ，`a` 的语法是通用的（它可以代表一个浮点数、整数甚至是一个没有虚部的复数），因此可以将其分配给任何兼容的类型。这些常量的默认类型可以被认为是根据上下文在运行中生成的。 `var intVar int = a` 要求 `a` 是 `int`，所以它变成一个 `int` 常量。 `var complex64Var complex64 = a` 要求 `a` 是 `complex64`，因此它变成一个复数类型。很简单的:)。
+
+## 3.5 数字表达式
+
+数字常量可以在表达式中自由混合和匹配，只有当它们被分配给变量或者在需要类型的代码中的任何地方使用时，才需要类型。
+
+```go
+package main
+
+import (  
+    "fmt"
+)
+
+func main() {  
+    var a = 5.9/8
+    fmt.Printf("a's type %T value %v",a, a)
+}
+```
+
+在上面的程序中， `5.9` 在语法中是浮点型，`8` 是整型，`5.9/8` 是允许的，因为两个都是数字常量。除法的结果是 `0.7375` 是一个浮点型，所以 `a` 的类型是浮点型。这个程序的输出结果是: `a's type float64 value 0.7375`。
