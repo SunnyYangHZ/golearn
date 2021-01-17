@@ -552,3 +552,124 @@ func main() {
 ```
 
 在上面的程序中， `5.9` 在语法中是浮点型，`8` 是整型，`5.9/8` 是允许的，因为两个都是数字常量。除法的结果是 `0.7375` 是一个浮点型，所以 `a` 的类型是浮点型。这个程序的输出结果是: `a's type float64 value 0.7375`。
+
+# 4.函数
+
+## 4.1 函数声明
+
+函数声明以关键字func开始，后面紧跟自定义的函数名functionname（函数名），函数的参数列表定义在（）里，返回值的类型则定义在之后的returntype（返回值类型）中，声明一个参数的语法采用**参数名 参数类型**的形式，任意多个参数采用类似（参数1 参数1的类型，参数2 参数2的类型）的形式指定。之后再{}之中的就是函数体。
+
+语法如下：
+
+```go
+func functionname(parametername type)returntype{
+    //函数体（具体实现的功能）
+}
+```
+
+## 4.2 示例函数
+
+下面我们将举例说明：
+
+```go
+func calculateBill(price int,no int)int{
+    var totalPrice=price*no //商品总价=商品单价*数量
+    return totalPrice //返回总价
+}
+```
+
+例中函数有两个整型的输入price和no，返回值totalPrice为price和no的乘积，也是整数类型。
+
+如果有连续若干个参数，他们的类型一致，我们无需一一罗列，只需在最后一个参数后添加该类型。如：**price int，no int**可以简写为**price，no int**，即上诉函数可以写作：
+
+```go
+func calculateBill(price,no int)int{
+    var totalPrice=price*no
+    return totalPrice
+}
+```
+
+## 4.3函数调用
+
+如上函数的调用方式：
+
+```go
+calculateBill(5,6)
+```
+
+完整程序如下：
+
+```go
+package main
+import "fmt"
+func calculateBill(price,no int)int{
+    var totalPrice=price*no
+    return totalPrice
+}
+func main{
+    price,no:=5,6
+    totalPrice:=calculateBill(price,no)
+    fmt.Println("Total price is",totalPrice)
+}
+```
+
+## 4.4 多返回值
+
+go语言支持程序有多个返回值。
+
+例：
+
+```go
+package main
+import "fmt"
+func rectProps(length,width float64)(float64,float64){
+    var area=length*width
+    var permeter=(length+width)*2
+    return area,perimeter
+}
+func main(){
+    area,perimeter:=rectProps(2.5,3.6)
+    fmt.Printf("area %f perimeter %f",area,perimeter)
+}
+```
+
+## 4.5 命名返回值
+
+从函数中可以返回一个命名值，当命名了返回值，可以认为这些值在函数第一行就被声明为变量了。
+
+```go
+func rectProps(length,width float64)(area,periieter float64){
+    area=length*width
+    permeter=(length+width)*2
+    return   //不需要明确指定返回值，默认返回area，permeter的值
+}
+```
+
+## 4.6 空白符
+
+_在go中被用作空白符，可以用作表示任何类型的任何值。
+
+我们继续以rectProps函数为例，该函数计算的是面积和周长。假如我们只需要计算面积，而并不关心周长的计算结果。此时，就要用到空白符**_**。
+
+即：
+
+```go
+package main
+import "fmt"
+func rectProps(length,width float64)(float64,float64){
+    var area=length*width
+    var perimeter=(length+width)*2
+    return area,perimeter
+}
+func main(){
+    area,_:=rectProps(5.6,7.8)
+    fmt.Printf("Area %f",area)
+}
+```
+
+
+
+
+
+
+
