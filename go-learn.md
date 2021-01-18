@@ -667,9 +667,247 @@ func main(){
 }
 ```
 
+# 5.包
+
+## 5.1 什么是包，为什么使用包
+
+我们所看到的go程序都只有一个文件，文件里包含一个main函数和其他函数，但在实际开发中，这种把所有的源代码都放到一个文件的方式并不好，这种编写方式，代码的重用和维护都会非常困难。而包package解决了这个问题。
+
+包用于组织go源码，提供了更好的可重用性欲可读性。由于包提供了代码的封装，因此go应用程序更易维护。
+
+## 5.2 main函数与main包
+
+所有课执行的go程序都必须包含一个main函数，这个函数的程序运行的入口，main函数应该房子啊main包中。
+
+***package packagename*这行代码指定了某一源文件属于一个包，它应该放在每一个源文件的第一行**，下面开始为程序创建一个main函数和main包。**在go工作区内的src文件夹中创建一个文件夹，命名为geometry**。在geometry文件夹中创建一个geometry.go文件。
+
+代码如下：
+
+```go
+package main
+import "fmt"
+func main(){
+    fmt.Println("geometrical shape properties")
+}
+```
+
+*package main*这一行指定该文件属于main包，import “packagename”语句用于导入一个已存在的包，这里我们导入了*fmt*包，包内包含Println方法。之后是main函数，他会打印输出语句。
+
+键入*go install geometry*，编译上述程序。该命令会在geometry文件夹内搜索拥有main函数的文件。在这里，它找到了geometry.go。接下来，它编译并产生一个名为geometry（在Windows下是geometry.exe）的二进制文件，该二进制文件放置于工作区的bin文件夹，现在，工作区的目录结构会是这样
+
+```
+src
+	geometry
+	geometry.go
+bin
+	geometry
+```
+
+键入workspacepath/bin/geometry，运行该程序。用自己的工作区来替换workspacepath，这个命令会执行bin文件夹里的geometry二进制文件。
+
+## 5.3 创建自定义的包
+
+我们将组织代码，使得所有与矩形有关的功能都放入rectangle包中，我们会创建一个自定义包rectangle，它有一个计算矩形面积和对角线的函数。
+
+**属于某一个包的源文件都应该放置于一个单独命名的文件夹里。按照go的惯例，应该用包名命名该文件夹。**
+
+因此我们在gemetry文件夹中，创建一个命名为rectangle的文件夹，在rectangle文件夹中，所有的文件都会以package rectangle作为开头，因为他们都属于rectangle包。
+
+在我们创建的rectangle文件夹中，再创建一个名为rectprops.go的文件，编辑代码。
+
+```go
+//rectprops.go
+package rectangle
+import "math"
+
+func Area(len,wid float64)float64{
+    area:=len*wid
+    return area
+}
+func Diagonal(len,wid float64)float64{
+    diagonal:=math.Sqrt((len*len)+(wid*wid))
+    return diagonal
+}
+
+```
+
+在上述代码中，我们创建了两个函数用于计算Area和Diagonal。矩形的面积是长、宽乘积。矩形的对角线是长、宽平方和的平方根，math包下的Sqrt函数用于计算平方根。
+
+这里函数Area和Diagonal都是以**大写字母开头**，之后解释原因。
+
+## 5.4 导入自定义包
+
+为了使用自定义包，我们必须要先导入它，导入自定义包的语法为import path。这里我们必须制定自定义包相对于工作区src文件夹的相对路径，此时的文件结构是：
+
+```go
+src
+	geometry
+		geometry.go   //包含main函数和main包
+		rectangle
+			rectprops.go
+```
+
+则在geometry.go里加入如下代码：
+
+```go
+//geometry.go
+package main
+
+import(
+	"fmt"
+	"geometry/rectangle"//导入自定义包
+)
+func main(){
+    var rectlen,rectWide float64=5,6
+    fmt.Println("geometrical shape properties")
+    fmt.Printf("area of rectangle %.2f\n",rectangle.Area(rectLen,rectWide))
+    fmt.Printf("diagonal of the rectangle %.2f",rectangle.Diagonal(rectLen,rectWide))
+}
+```
+
+上述代码导入了rectangle包，并调用了里面的Area和Diagonal函数，得到矩形的面积和对角线。Printf内的格式说明符%.2f会将浮点数截断到小数点两位。
+
+## 5.5 导出名字
+
+我们在上述留下一个疑问，为什么Area和Diagonal首字母要大写，在go语言中，任何以大写字母开头的变量或者函数都是被导出的名字，其他包只能访问被导出的函数和变量。这里，我们需要在main包中访问Area和Diagonal函数，因此会将他们的首字母大写。
+
+在rectprops.go中，如果函数名从Area(len,wid float64)变为area(len,wid float64),并且在geometry.go中，rectangle.Area(rectlen,rectWide)变为rectangle.area(rectlen,rectWide)则在程序运行过程中会抛出错误。
+
+## 5.6 init函数
+
+所有包都可以包含一个init函数，init函数不应该有任何返回值类型和参数。在我们的代码中也不能显式地调用。init函数形式如下：
+
+```go
+func init(){
+    
+}
+```
+
+init函数可用于执行初始化任务，也可用于在开始执行之前验证程序的正确性。
+
+包的初始化顺序如下：
+
+1. 首先初始化包级别（package level）的变量
+2. 紧接着调用init函数，包可以有多个init函数（在一个或多个文件中），他们按照编译器解析他们的顺序进行调用。
+
+如果一个包导入了另一个包，会先初始化被导入的包，尽管一个包可能会被导入多次，但只初始化一次。为了理解init函数，我们接下来对程序做了一些修改。
+
+首先在rectprops.go文件中添加了一个init函数。
+
+```go
+//rectprops.go
+package rectangle
 
 
+import(
+	"math"
+	"fmt"
+)
+func init(){
+    fmt.Println("rectangle package initialized")
+    
+}
+func Area(len,wid float64)float64{
+    area:=len*wid
+    return area
+}
 
+func Diagonal(len,wid float64)float64{
+    diagonal:=math.Sqrt((len*len)+(wid*wid))
+    return diagonal
+}
+```
+
+我们仅仅添加了init函数，并实现打印功能。
+
+之后，我们来修改main包。我们知道矩形的长和宽都大于0，我们将在geometry.go中使用init函数和保级别变量来检查矩形的长和宽。
+
+修改gemetry.go
+
+```go
+//gemetry.go
+package main
+import(
+	"fmt"
+	"geometry/rectangle"//导入自定义包
+	)
+var rectLen,rectWidth float64=5,6 //包级别变量
+func init(){
+    //init函数检查长宽是否大于0
+    fmt.Println("main package initialized")
+    if rectLen<0{
+        log.Fatal("length is less than zero")
+    }
+    if rectWidth<0{
+        log.Fatal("width is less than zero")
+    }
+}
+
+func main(){
+    fmt.Println("Geometrical shape properties")
+    fmt.Printf("area of rectangle %.2f\n",rectangle.Area(rectLen,rectWidth))
+fmt.Printf("diagonal of the rectangle %.2f ",rectangle.Diagonal(rectLen, rectWidth))
+}
+```
+
+我们对geometry.go 做了如下修改：
+
+	1. 变量rectLen和rectWidth从main函数级别转移到了包级别。
+ 	2. 添加了init函数。当rectLen或rectWidth小于0时，init函数使用log.Fatal函数打印一条日志，并终止程序。
+
+main包的初始化顺序为：
+
+	1. 首先初始化被导入的包，因此，首先初始化了rectangle包。
+ 	2. 接着初始化了包级别的变量rectLen和rectWidth。
+ 	3. 调用init函数。
+ 	4. 最后调用main函数。
+
+运行结果：
+
+```
+rectangle package initialized  
+main package initialized  
+Geometrical shape properties  
+area of rectangle 42.00  
+diagonal of the rectangle 9.22
+```
+
+## 5.7 使用空白标识符
+
+导入了包，却不使用它，这在go语法中是违法的，为避免报错可以使用空白标识符。
+
+如下代码可以避免错误发生
+
+```go
+package main
+
+import (  
+    "geometry/rectangle" 
+)
+
+var _ = rectangle.Area // 错误屏蔽器
+
+func main() {
+
+}
+```
+
+`var _ = rectangle.Area` 这一行屏蔽了错误。我们应该了解这些错误屏蔽器（Error Silencer）的动态，在程序开发结束时就移除它们，包括那些还没有使用过的包。由此建议在 import 语句下面的包级别范围中写上错误屏蔽器。
+
+有时候我们导入一个包，只是为了确保它进行了初始化，而无需使用包中的任何函数或变量。例如，我们或许需要确保调用了 rectangle 包的 init 函数，而不需要在代码中使用它。这种情况也可以使用空白标识符，如下所示。
+
+```go
+package main 
+
+import (
+    _ "geometry/rectangle" 
+)
+func main() {
+
+}
+```
+
+运行上面的程序，会输出 `rectangle package initialized`。尽管在所有代码里，我们都没有使用这个包，但还是成功初始化了它。
 
 
 
