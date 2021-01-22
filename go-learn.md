@@ -853,14 +853,14 @@ fmt.Printf("diagonal of the rectangle %.2f ",rectangle.Diagonal(rectLen, rectWid
 我们对geometry.go 做了如下修改：
 
 	1. 变量rectLen和rectWidth从main函数级别转移到了包级别。
- 	2. 添加了init函数。当rectLen或rectWidth小于0时，init函数使用log.Fatal函数打印一条日志，并终止程序。
+	2. 添加了init函数。当rectLen或rectWidth小于0时，init函数使用log.Fatal函数打印一条日志，并终止程序。
 
 main包的初始化顺序为：
 
 	1. 首先初始化被导入的包，因此，首先初始化了rectangle包。
- 	2. 接着初始化了包级别的变量rectLen和rectWidth。
- 	3. 调用init函数。
- 	4. 最后调用main函数。
+	2. 接着初始化了包级别的变量rectLen和rectWidth。
+	3. 调用init函数。
+	4. 最后调用main函数。
 
 运行结果：
 
@@ -910,4 +910,837 @@ func main() {
 运行上面的程序，会输出 `rectangle package initialized`。尽管在所有代码里，我们都没有使用这个包，但还是成功初始化了它。
 
 
+
+# 6.if-else语句
+
+if是条件语句，语法结构是：
+
+```go
+if condition{
+    
+}
+```
+
+如果condition为真，则执行{ }之间的代码。
+
+if语句还有可选部分即else if和else。
+
+```go
+if condition{
+    //其他语句
+}else if condition{
+    //语句
+}else{
+    
+}
+```
+
+if-else语句之间可以有任意数量的else if，条件判断顺序是从上到下，如果if或者else if条件判断为真，则执行相应的代码块。如果没有条件为真，则else代码块被执行。
+
+例：检测数字的奇偶性
+
+```go
+package main
+import "fmt"
+func main(){
+    num:=10
+    if num%2==0{
+        fmt.Println("the nember is even")
+    }else{
+        fmt.Println("the num is odd")
+    }
+}
+```
+
+如果 num%2==0语句检测到num取2的余数为0，则但因输出“the number is even”，否则输出“the number is odd”
+
+if还有另外一种形式，包含一个statement可选语句部分，该组件在条件判断之前运行。语法为：
+
+```go
+if statement;condition{
+    
+}
+```
+
+重写上述判断奇偶代码：
+
+```go
+package main
+import "fmt"
+func main(){
+    if num:=10;num%2==0{
+        fmt.Println(num,"is even")
+    }else{
+        fmt.Println(num,"is odd")
+    }
+}
+```
+
+在上面的程序中，num在if语句中进行初始化，num只能从if和else中访问，也就是说num的范围仅限于if-else代码块，如果我们试图从if-else外部访问num，则不能编译通过。
+
+让我们再写一个使用 `else if` 的程序。
+
+```go
+package main
+
+import (  
+    "fmt"
+)
+
+func main() {  
+    num := 99
+    if num <= 50 {
+        fmt.Println("number is less than or equal to 50")
+    } else if num >= 51 && num <= 100 {
+        fmt.Println("number is between 51 and 100")
+    } else {
+        fmt.Println("number is greater than 100")
+    }
+
+}
+```
+
+在上面的程序中，如果 `else if num >= 51 && num <= 100` 为真，程序将输出 `number is between 51 and 100`。
+
+
+
+**注意**
+
+`else` 语句应该在 `if` 语句的大括号 `}` 之后的同一行中。如果不是，编译器会不通过。
+
+让我们通过以下程序来理解它。
+
+```go
+package main
+
+import (  
+    "fmt"
+)
+
+func main() {  
+    num := 10
+    if num % 2 == 0 { //checks if number is even
+        fmt.Println("the number is even") 
+    }  
+    else {
+        fmt.Println("the number is odd")
+    }
+}
+```
+
+在上面的程序中，`else` 语句不是从 `if` 语句结束后的 `}` 同一行开始。而是从下一行开始。这是不允许的。如果运行这个程序，编译器会输出错误，
+
+在 Go 语言规则中，它指定在 `}` 之后插入一个分号，如果这是该行的最终标记。因此，在if语句后面的 `}` 会自动插入一个分号。
+
+实际上我们的程序变成了
+
+```go
+if num%2 == 0 {  
+      fmt.Println("the number is even") 
+};  //semicolon inserted by Go
+else {  
+      fmt.Println("the number is odd")
+}
+```
+
+分号插入之后。从上面代码片段可以看出第三行插入了分号。
+
+由于 `if{…} else {…}` 是一个单独的语句，它的中间不应该出现分号。因此，需要将 `else` 语句放置在 `}` 之后处于同一行中。
+
+我已经重写了程序，将 else 语句移动到 if 语句结束后 `}` 的后面，以防止分号的自动插入。
+
+```go
+package main
+
+import (  
+    "fmt"
+)
+
+func main() {  
+    num := 10
+    if num%2 == 0 { //checks if number is even
+        fmt.Println("the number is even") 
+    } else {
+        fmt.Println("the number is odd")
+    }
+}
+```
+
+# 7.循环
+
+for是go语言中唯一存在的循环语句。
+
+## 7.1 for循环语句语法
+
+```go
+for initialisation;condition;post{
+    
+}
+```
+
+初始化语句只执行一次，循环初始化后，将检查循环条件，如果条件的计算结果为true，则{}内的循环将被执行，接着执行post语句，post语句将在每次成功循环迭代后执行。在执行post语句后，条件将被再次检查，如果为true，则循环继续被执行，否则结束循环。
+
+例：
+
+```go
+package main
+import "fmt"
+func main(){
+    for i:=1;i<=10;i++{
+        fmt.Printf("%d",i)
+    }
+}
+```
+
+## 7.2 break
+
+break语句用于在完成正常执行之前突然中止for循环，之后程序将会在for循环下一行代码开始执行。
+
+如；
+
+```go
+package main
+import "fmt"
+func main(){
+    for i:=1;i<=10;i++{
+        if i>5{
+            break
+        }
+        fmt.Printf("%d",i)
+    }
+    fmt.Printf("\nline after for loop")
+}
+```
+
+在上述程序中，循环过程i的值会被判断，如果i的值大于5，之后break语句会执行，循环就会被中止，打印语句会在for循环结束后执行。输出结果为：
+
+```
+1 2 3 4 5  
+line after for loop
+```
+
+## 7.3 continue
+
+continue语句用来跳出for循环中当前循环，在continue语句后的所有for循环语句都不会再本次循环中执行。循环体会在下一次循环中继续执行。
+
+接下来我们写一个打印1到10并且使用continue的程序
+
+```go
+package main
+import "fmt"
+func main(){
+    for i:=1;i<=10;i++{
+        if i%2==0{
+            continue
+        }
+        fmt.Printf("%d",i)
+    }
+}
+```
+
+在上述程序中，代码 *if i%2==0*会判断i除以2的余数是不是0，如果是0，这个数字就是偶数，然后执行continue语句，从而控制程序进入下一个循环体，因此在continue后面的打印语句不会被执行而进入下一个循环。输出1 3 5 7 9.
+
+## 7.4 更多例子
+
+下面程序打印从0到10所有的偶数。
+
+```go
+package main
+import "fmt"
+func main(){
+    i:=0
+    for ;i<=10;{
+        fmt.Printf("%d",i)
+        i+=2
+    }
+}
+```
+
+正如我们已经知道的，for循环包含三个部分，初始化语句，条件语句，post语句。这三个语句都是可选的，在上述程序中，初始化语句和post语句都被省略了。i在for循环外被初始化为0，只要i<=10循环就被执行。在循环外，i以2的增量自增。输出0 2 4 6 8 10.
+
+上述程序也可被重写为：
+
+```go
+package main
+
+import (  
+    "fmt"
+)
+
+func main() {  
+    i := 0
+    for i <= 10 { //semicolons are ommitted and only condition is present
+        fmt.Printf("%d ", i)
+        i += 2
+    }
+}
+```
+
+在for循环中可以声明和操作多个变量，让我们来使用声明多个变量来打印如下程序
+
+```
+10 * 1 = 10  
+11 * 2 = 22  
+12 * 3 = 36  
+13 * 4 = 52  
+14 * 5 = 70  
+15 * 6 = 90  
+16 * 7 = 112  
+17 * 8 = 136  
+18 * 9 = 162  
+19 * 10 = 190
+```
+
+```go
+package main
+import "fmt"
+func main(){
+    for no,i:=10,1;i<=10&&no<=19;i,no=i+1,no+1{
+        fmt.Printf("%d*%d=%d\n",no,i,no*i)
+    }
+}
+```
+
+在上面程序中no和i被声明然后分别被初始化为10和1，在每一次循环结束后no和i都自增1.布尔操作符&&被用来确保i小于等于10并且no小于等于19.
+
+## 7.5 无限循环
+
+语法：
+
+```go
+for{
+    
+}
+```
+
+以下程序为一直打印hello world
+
+```go
+package main
+import "fmt"
+func main(){
+    for{
+        fmt.Println("hello world")
+    }
+}
+```
+
+# 8.switch语句
+
+switch是一个条件语句，用于将表达式的值与可能匹配的选项列表进行比较，并根据匹配情况执行相应的代码块，它可以被认为是替代多个if-else子句的常用方式。
+
+示例如代码所示：
+
+```go
+package main
+import "fmt"
+func main(){
+    figer:=4
+    switch finger{
+        case 1:
+        fmt.Println("Thumb")
+        case 2:
+        fmt.Println("Index")
+        case 3:
+        fmt.Println("Middle")
+        case 4:
+        fmt.Println("Ring")
+        case 5:
+        fmt.Println("Pinky")
+    }
+}
+```
+
+在上述程序中，switch finger将finger的值与每个case语句进行比较。通过从上到下对每一个值进行对比，并执行与选项值匹配的第一个逻辑。在上述代码中，finger的值为4，因此打印的结果是Ring。在选项列表中，case不允许出现重复项。如果存在重复，则会抛出错误。
+
+```go
+package main
+import "fmt"
+func main(){
+    finger:=4
+    switch finger{
+        case 1:
+        fmt.Println("Thumb")
+        case 2:
+        fmt.Println("Index")
+        case 3:
+        fmt.Println("Middle")
+        case 4:
+        fmt.Println("Ring")
+        case 4:
+        fmt.Println("Another Ring")
+        case 5:
+        fmt.Println("Pinky")
+       
+    }
+}
+```
+
+## 8.1 默认情况
+
+当存在与其他所有情况都不匹配时，将执行默认情况。
+
+```go
+package main
+import "fmt"
+func main(){
+    switch finger:=8;finger{
+        case 1:
+        fmt.Println("Thumb")
+        case 2:
+        fmt.Println("Index")
+        case 3:
+        fmt.Println("Middle")
+    case 4:
+        fmt.Println("Ring")
+    case 5:
+        fmt.Println("Pinky")
+        default:
+        fmt.Println("incorrect finger number")
+    }
+}
+```
+
+在上述程序中，finger的值是8，它不符合其中任何一种情况，因此会打印 incorrect finger number。default不一定只能出现在switch语句的最后，他可以放在switch语句的任何地方。
+
+在上述代码中，变量的声明方式被改变了，作用范围只局限于这个switch。
+
+## 8.2 多表达式判断
+
+通过用逗号分隔，可以在一个case中包含多个表达式。
+
+```go
+package main
+import "fmt"
+func main(){
+    letter:="i"
+    switch letter{
+        case "a","e","i","o","u":
+        fmt.Println("vowel")
+        default:
+        fmt.Println("not a vowel")
+    }
+}
+```
+
+在 `case "a","e","i","o","u":` 这一行中，列举了所有的元音。只要匹配该项，则将输出 `vowel`。
+
+## 8.3 无表达式的switch
+
+在switch语句中，表达式是可选的，可以被省略。如果省略了表达式，则表示这个switch语句等同于switch true，并且每个case表达式都被认定为有效，相应的代码块也会被执行。
+
+```go
+package main
+import "fmt"
+func main(){
+    num:=75
+    switch{
+        case num>=0&&num<=50:
+        fmt.Println("num is greater than 0 and less than 50")
+        case num>=51&&num<=100:
+        fmt.Println("num is greater than 51 and less than 100")
+        case num>=101:
+        fmt.Println("num is greater than 100")
+    }
+}
+```
+
+在上述代码中，switch中缺少表达式，因此默认它为true，true值会和每一个case的值结果进行匹配，case num>=51&&<=100：为true，所以输出num is greater than 51 and less than 100。这种类型的switch语句可以替代多个if-else子句。
+
+## 8.4 Fallthrough语句
+
+在go中，每执行完一个case后，会从switch语句中跳出来，不在做后续case的判断和执行。使用`fallthrough`语句可以在已经执行完成的case之后，把控制权转移到下一个case的执行代码中。
+
+代码示例如下：
+
+```go
+package main
+import "fmt"
+func number()int{
+    num:=15*5
+    return num
+}
+
+func main(){
+    switch num:=number();{
+        case num<50:
+        fmt.Printf("%d is lesser than 50\n",num)
+        fallthrough
+        case num<100:
+        fmt.Printf("%d is lesser than 100\n",num)
+        fallthrough
+        case num<200:
+        fmt.Printf("%d is lesser than 200",num)
+    }
+}
+```
+
+switch和case的表达式不一定是常量，他们也可以在运行过程中通过计算得到，在上述程序中，num被初始化为函数number（）的返回值，程序运行到switch中时，会计算出case的值，case num<100:的结果为true，所以程序输出 `75 is lesser than 100`.当执行到下一句fallthrough时，程序控制直接跳转到下一个case的第一个执行逻辑中，所以打印出`75 is lesser than 200`.最后这个程序的输出是：
+
+```
+75 is lesser than 100  
+75 is lesser than 200
+```
+
+**`fallthrough` 语句应该是 case 子句的最后一个语句。如果它出现在了 case 语句的中间，编译器将会报错：`fallthrough statement out of place`**
+
+# 9.数组和切片
+
+## 9.1 数组
+
+数组是同一类型的集合，例如：整数集合5,6,7,8形成一个数组。go语言中不允许混合不同类型的元素。例如包含字符串的整数的数组。
+
+### 9.1.1 数组的声明
+
+一个数组的表示形式为[n]T。n表示数组中元素的数量，T表示每个元素的类型。元素的数量n也是该类型的一部分。
+
+可以使用不同的方式来声明数组：
+
+```go
+package main
+import "fmt"
+func main(){
+    var a[3]int
+    fmt.Println(a)
+}
+```
+
+var a[3]int声明了一个长度为3的整型数组。**数组中的所有元素都被自动赋值为数组类型的零值。在这种情况下，a是一个整型数组，因此a的所有元素都被赋值为0，即int型的零值。输出结果为[0 0 0].
+
+数组的索引从0开始到length-1结束，下面我们将为上述数组赋值。
+
+```go
+package mian
+import "fmt"
+func main(){
+    var a[3]int
+    a[0]=10
+    a[1]=9
+    a[2]=8
+    fmt.Println(a)
+}
+```
+
+输出结果为[10 9 8]
+
+### 9.1.2 简略声明
+
+下面我们用简略声明来创建相同的数组
+
+```go
+package main
+import "fmt"
+func main(){
+    a:=[3]int{10,9,8}
+    fmt.Println(a)
+	}
+```
+
+输出结果为：[10 9 8]
+
+在简略声明中，我们也不需要将数组中所有元素赋值：
+
+```go
+package main
+import "fmt"
+func main(){
+    a:=[3]int{12}
+    fmt.Println(a)
+}
+```
+
+上述程序声明了一个长度为3的数组，但只提供了一个数值12，其他自动赋值0，输出结果为：[12 0 0]
+
+在声明过程中，我们也可以不去声明长度，用`...`代替，编译器自动计算长度：
+
+```go
+package main
+import "fmt"
+func main(){
+    a:=[...]int{10,9,8}
+    fmt.Println(a)
+}
+```
+
+**数组的大小是类型的一部分**，因此[12]int和[15]int是不同类型，数组不能调整大小。
+
+```go
+package main
+func main(){
+    a:=[3]int{5,6,7}
+    var b [5]int
+    b=a
+}
+```
+
+运行此程序会抛出错误。
+
+### 9.1.3 数组的值类型
+
+go中的数组是值类型而不是引用类型。这意味着当数组赋值给一个新的变量时，该变量会得到一个原始数组的一个副本如果对新变量进行更改，则不会影响原始数组。
+
+```go
+package main
+import "fmt"
+func main(){
+    a:=[...]string{"USA","China","India","Germany","France"}
+    b:=a
+    b[0]="Singapore"
+    fmt.Println("a is",a)
+    fmt.Println("b is ",b)
+}
+```
+
+在上述程序的第7行，a的副本被赋给b，在8行中，b的第一个元素改为Singapore，这不会再原始数组a中反映出来，输出为：
+
+```
+a is [USA China India Germany France]  
+b is [Singapore China India Germany France]
+```
+
+同样，当数组作为参数传递给函数时，他们按照值传递，而原始数组保持不变。
+
+```go
+package main
+import "fmt"
+func changeLocal(num [5]int){
+    num[0]=55
+    fmt.Println("inside function",num)
+}
+func main(){
+    num:=[...]int{5,6,7,8,8}
+    fmt.Println("before passing to function",num)
+    changeLocal(num)
+    fmt.Println("after passing to function",num)
+}
+```
+
+输出结果：
+
+```
+before passing to function  [5 6 7 8 8]
+inside function  [55 6 7 8 8]
+after passing to function  [5 6 7 8 8]
+```
+
+### 9.1.4 数组的长度
+
+通过将数组作为参数传递给len函数，可以得到数组的长度。
+
+```go
+package main
+
+import "fmt"
+func main(){
+    a:=[...]float64{1.2,3.4,5.6,7.8,9.0}
+    fmt.Println("length of a is",len(a))
+}
+```
+
+### 9.1.5 使用range迭代数组
+
+for循环可用于遍历数组中的元素
+
+```go
+package main
+import "fmt"
+func main(){
+    a:=[...]float64{1.2,3.4,5.6,7.8,9.0}
+    for i:=0;i<len(a);i++{
+        fmt.Printf("%d th element of a is %.2f\n",i,a[i])
+    }
+}
+```
+
+上面的程序使用for循环比阿尼数组中的元素，从索引0到length of the array -1，输出结果为：
+
+```
+0 th element of a is 1.20
+1 th element of a is 3.40 
+2 th element of a is 5.60 
+3 th element of a is 7.80
+4 th element of a is 9.00
+```
+
+go提供了一种更好，更简洁的方法，通过使用for循环的range方法来遍历数组。range返回索引和该索引的值：
+
+```go
+package main
+
+import "fmt"
+func main(){
+    a:=[...]float64{1.2,3.4,5.6,7.8}
+    sun:=float64(0)
+    for i,v:range a{
+        fmt.Printf("%d the element of a is %.2f\n",i,v)
+        sum+=v
+    }
+    fmt.Println("\nsum of all elements of a",sum)
+}
+```
+
+上述程序中的for i,v:=range a 利用的for循环range方式，返回索引和该索引处的值，并计算数组的综合，输出为：
+
+如果我们只需要值或者索引，可以用“_"空白标识符替换索引来执行。
+
+```go
+for _,v:=range a{
+    
+}
+```
+
+上述for循环忽略索引，取值。
+
+### 9.1.6 多维数组
+
+go语言可以创建多维数组
+
+```go
+package main
+import "fmt"
+func printarry(a [3][2]string){
+    for _,v1:=range a{
+        for _,v2:=range v1{
+            fmt.Printf("%s",v2)
+        }
+        fmt.Printf("\n")
+    }
+}
+
+func main(){
+    a:=[3][2]string{
+        {"lion","tiger"},
+        {"cat","dog"},
+        {"pigeon","peacock"},
+    }
+    printarry(a)
+    var b [3][2]string
+    b[0][0]="apple"
+    b[0][1]="samsung"
+    b[1][0]="microsoft"
+    b[1][1]="google"
+    b[2][0]="AT&T"
+    b[2][1]="T-Mobile"
+    fmt.Printf("\n")
+    printarray(b)
+```
+
+在上述程序的第 17 行，用简略语法声明一个二维字符串数组 a 。20 行末尾的逗号是必需的。
+
+另外一个二维数组 b 在 23 行声明，字符串通过每个索引一个一个添加。这是另一种初始化二维数组的方法。
+
+输出：
+
+```
+lion tiger
+cat dog
+pigeon peacock
+
+apple samsung
+microsoft google
+AT&T T-Mobile
+```
+
+这就是数组，尽管数组看上去似乎足够灵活，但是它们具有固定长度的限制，不可能增加数组的长度。这就要用到 **切片** 了。事实上，在 Go 中，切片比传统数组更常见。
+
+## 9.2 切片
+
+切片是由数组建立的一种方便、灵活且功能强大的包装。切片本身不拥有任何数据，他们只是对现有数组的引用。
+
+### 9.2.1 创建一个切片
+
+带有T类型元素的切片由[]T表示
+
+```go
+package main
+import "fmt"
+func main(){
+    a:=[5]int{1,2,3,4,5}
+    var b []int=a[1:4]
+    fmt.Println(b)
+}
+```
+
+使用语法a[start:end]创建一个从a数组索引start开始到end-1结束的切片，因此，在上述程序的第9行中，a[1:4]从索引1到3创建了a数组的一个切片表示。因此，切片b的值为[2,3,4,5]
+
+另一种切片的创建方法：
+
+```go
+package main
+import "fmt"
+func main(){
+    c:=[]int{6,7,8}
+    fmt.Println(c)
+}
+```
+
+在上述程序中，c:=[]int{6,7,8}创建了一个有三个整型元素的数组，并返回一个存储在c中的切片引用。
+
+### 9.2.2 切片的修改
+
+切片自己不拥有任何数据，它只是底层数组的一种表示，对切片所做的任何修改都会反映在底层数组中。
+
+```go
+package main
+import "fmt"
+func main(){
+    darr:=[...]int{5,6,7,8,9,1,2,3,4}
+    dslice:=darr[2:5]
+    fmt.Println("array before",darr)
+    for i:=range dslice{
+        dslice[i]++
+    }
+    fmt.Println("array after",darr)
+}
+```
+
+在上述程序的第 9 行，我们根据数组索引 2,3,4 创建一个切片 `dslice`。for 循环将这些索引中的值逐个递增。当我们使用 for 循环打印数组时，我们可以看到对切片的更改反映在数组中。该程序的输出是
+
+```
+array before [5 6 7 8 9 1 2 3 4 ]  
+array after [5 6 8 9 10 2 2 3 4]
+```
+
+当多个切片公用相同的底层数组时，每个切片所做的更改将反映在数组中。
+
+```go
+package main
+import "fmt"
+func main(){
+    numa:=[3]int{78,79,80}
+    nums1:=numa[:]
+    nums2:=numa[:]
+    fmt.Println("array befor change 1",numa)
+    nums1[0]=100
+    fmt.Println("array after modification to slice nums1",numa)
+    nums2[1]=101
+    fmt.Println("array after modification to slice nums2",numa)
+}
+```
+
+`numa [:]` 缺少开始和结束值。开始和结束的默认值分别为 `0` 和 `len (numa)`。两个切片 `nums1` 和 `nums2` 共享相同的数组。该程序的输出是
+
+```
+array before change 1 [78 79 80]  
+array after modification to slice nums1 [100 79 80] 
+array after modification to slice nums2 [100 101 80]
+```
+
+### 9.2.3 切片的长度和容量
+
+切片的长度是切片中的元素数，切片的容量是从创建切片索引开始的底层数据中的元素数。
+
+通过代码来理解：
+
+```go
+package main
+import "fmt"
+func main(){
+    fruitarry:=[...]string{"apple","orange","grape","mango","water melon", "pine apple", "chikoo"}
+    fruitslice:=fruitarry[1:3]
+    fmt.Printf("length of slice %d capacity %d",len(fruitslice),cap(fruitslice))
+   }
+```
+
+在上述程序中，fruitslice是从fruitarray的索引1,2创建的，因此fruitlice的长度为2，fruitarry的长度为7，fruiteslice是从fruitarray的索引1创建的，因此，fruitslice的容量是从fruitarray索引为1开始，也就是说从orange开始，该值为6，因此，fruitslice的容量为6，该程序输出切片的长度为2容量为6。
 
