@@ -1,3 +1,5 @@
+
+
 # 1.变量
 
 ## 1. 变量是什么
@@ -1743,4 +1745,179 @@ func main(){
 ```
 
 在上述程序中，fruitslice是从fruitarray的索引1,2创建的，因此fruitlice的长度为2，fruitarry的长度为7，fruiteslice是从fruitarray的索引1创建的，因此，fruitslice的容量是从fruitarray索引为1开始，也就是说从orange开始，该值为6，因此，fruitslice的容量为6，该程序输出切片的长度为2容量为6。
+
+### 9.2.4 使用make创建一个切片
+
+`func make([]T,len,cap)[]T`通过传递类型，长度和容量来创建切片，容量是可选参数，默认值为切片长度，make函数创建一个数组，并返回应用该数组的切片。
+
+```go
+package main
+import "fmt"
+func main(){
+    i:=make([]int,5,5)
+    fmt.Println(i)
+}
+```
+
+使用make创建切片时默认情况下这些值为零，上述程序的输出为[0 0 0 0 0 ]
+
+### 9.2.5 追加切片元素
+
+正如我们知道数组的长度是固定的，它的长度不能增加。切片是动态的，使用append可以将新元素追加到切片上。append函数的定义是`func append(s[]T,x...T)[]T`
+
+**x...T**在函数定义中表示该函数接受参数x的个数是可变的，这些类型的函数被称为**可变函数**
+
+下面通过程序来解释：
+
+```go
+package main
+import "fmt"
+func main(){
+    cars:=[]string{"Ferrari","Honda","Ford"}
+    fmt.Println("cars:",cars,"has old length",len(cars),"and capacity",cap(cars))
+    cars=append(cars,"Toyota")
+    fmt.Println("cars:",cars,"has new length",len(cars),"and capacity",cap(cars))
+}
+```
+
+在上述程序中，cars的容量最初是3，之后，我们给cars添加了一个新元素，并把`append(cars,"Toyota")`返回的切片赋值给cars，现在cars的容量翻了一番，变成了6，输出为：
+
+```
+cars: [Ferrari Honda Ford] has old length 3 and capacity 3  
+cars: [Ferrari Honda Ford Toyota] has new length 4 and capacity 6
+```
+
+切片类型的零值为nil。一个nil切片的长度和容量为0。可以使用append函数将值追加到nil切片。
+
+```go
+package main
+import "fmt"
+func main(){
+    var names []string
+    if names==nil{
+        fmt.Println("slice is nil going to append")
+        names=append(names,"John","Sebastian","Vinay")
+        fmt.Println("names contents:",names)
+    }
+}
+```
+
+在上面的程序`names`是nil，我们已经添加了3个字符串给`names`，该输出是：
+
+```
+slice is nil going to append  
+names contents: [John Sebastian Vinay]
+```
+
+也可以使用`...`运算符将一个切片添加到另一个切片。你可以在**可变参数函数**教程中了解有关此运算符的更多信息。
+
+```go
+package main
+import "fmt"
+func main(){
+    veggies:=[]string{"potatoes","tomatoes","brinjal"}
+    fruits:=[]string{"oranage","apples"}
+    food:=append(veggies,fruits...)
+    fmt.Println("food:",food)
+}
+```
+
+在上述程序中，food通过`append(veggies,fruits...)`创建，程序输出为：
+
+```
+food: [potatoes tomatoes brinjal oranges apples]
+```
+
+### 9.2.6 切片的函数传递
+
+我们可以认为，切片在内部可由一个结构体类型表示，表现形式为：
+
+```go
+type slice struct{
+    Length int
+    Capacity int
+    ZerothElement *byte
+}
+```
+
+切片包含长度，容量和指向数组第零个元素的指针。当切片传递给函数时，即使他通过值传递，指针变量也将引用相同的底层数组。因此，当切片作为参数传递给函数时，函数内所做的更改也会在函数外可见。
+
+```go
+package main
+import "fmt"
+
+func subtactOne(numbers []int){
+    for i:=range numbers{
+        numbers[i]-=2
+    }
+}
+
+func main(){
+    nos:=[]int{8,7,6}
+    fmt.Println("slice before function call",nos)
+    subtactOne(nos)
+    fmt.Println("slice after function call",nos)
+}
+```
+
+上述程序中，调用函数将切片中的每个元素递减2，在函数调用后打印切片时，这些更改时可见的，上述程序的输出是：
+
+```
+array before function call [8 7 6]  
+array after function call [6 5 4]
+```
+
+### 9.2.7 多维切片
+
+类似于数组，切片可以有多个维度。
+
+```go
+package main
+import "fmt"
+func main(){
+    pls:=[][]string{
+        {"C","C++"},
+        {"JavaScript"},
+        {"Go","Rust"},
+    }
+    for _,v1:=range pls{
+        for _,v2:=range v1{
+            fmt.Printf("%s",v2)
+        }
+        fmt.Printf("\n")
+    }
+}
+```
+
+程序的输出：
+
+```
+C C++  
+JavaScript  
+Go Rust
+```
+
+### 9.2.8 内存优化
+
+切片持有对底层数组的引用。只要切片在内存中，数组就不能被垃圾回收，在内存管理方面，这是需要注意的。让我们假设我们有一个非常大的数组，我们只想处理它的一小部分，然后，我们由这个数组常见一个切片。并开始处理切片。这里需要重点注意的是，在切片引用时数组仍然存在内存中。
+
+一种解决方法是使用copy函数`func copy(dst,src[]T)int`来生成一个切片副本，这样我们可以使用新的切片，原始数组可以被垃圾回收。
+
+```go
+package main
+import "fmt"
+func countries()[]string{
+    countries:=[]string{"USA","Singapore","Germany","India","Australia"}
+    neededCountries:=countries[:len(countries)-2]
+    countriesCpy:=make([]string,len(neededCountries))
+    copy(countriesCpy,neededCountries)
+    return countriesCpy
+}
+func main(){
+    countriesNeeded:=countries()
+    fmt.Println(countriesNeeded)
+}
+```
+
+在上述程序中，`needeCountries:=countries[:len(countries)-2]`创建一个去掉尾部2个元素的切片`countries`,将 `neededCountries` 复制到 `countriesCpy` 同时在函数的下一行返回 countriesCpy。现在 `countries` 数组可以被垃圾回收, 因为 `neededCountries` 不再被引用。
 
