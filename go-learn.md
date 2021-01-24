@@ -1921,3 +1921,143 @@ func main(){
 
 在上述程序中，`needeCountries:=countries[:len(countries)-2]`创建一个去掉尾部2个元素的切片`countries`,将 `neededCountries` 复制到 `countriesCpy` 同时在函数的下一行返回 countriesCpy。现在 `countries` 数组可以被垃圾回收, 因为 `neededCountries` 不再被引用。
 
+# 10.可变参数函数
+
+可变参数函数是一种参数个数可变的函数。
+
+## 10.1 语法
+
+如果函数最后一个参数被记做...T，这时函数可以接受任意个T类型参数作为最后一个参数。
+
+**注意：**只有函数最后一个参数才允许可变。
+
+### 例子说明
+
+append函数可以将不同数量的参数传递。
+
+```go
+func append(slice []Type,elems ...Type)[]Type
+```
+
+上面是append函数的定义，在定义中elems是可变参数，这样append函数可以接受可变化的参数。
+
+让我们创建一个我们自己的可变参数函数：
+
+```go
+package main
+import "fmt"
+func find(num int,nums ...int){
+    fmt.Printf("type of nums is %T\n",nums)
+    found:=false
+    for i,v:=range nums{
+        if v==num{
+            fmt.Println(num,"found at index",i,"in",nums)
+            found=true
+        }
+    }
+    if !found{
+        fmt.Println(num,"not found in",nums)
+    }
+    fmt.Printf("\n")
+}
+func main(){
+    find(89,89,90,95)
+    find(45,56,67,45,90,109)
+    find(78,38,56,98)
+    find(87)
+}
+```
+
+在上面程序中，`func find(num int,nums ...int)`中的`nums`可接受任意数量的参数，在find函数中，参数nums相当于一个整型切片。
+
+**可变参数函数的工作原理是把可变参数转换为一个新的切片。以上面程序`find`函数中的可变参数是89,90,95。find函数接受一个int类型的可变参数。因此这三个参数被编译器转换为一个int类型切片`int []int{89,90,95}`然后被传入find函数。
+
+## 10.2 给可变参数函数传入切片
+
+```go
+package main
+import "fmt"
+func find(num int,nums ...int){
+    fmt.Printf("type of nums is %T\n",nums)
+    found:=false
+    for i,v:=range nums{
+        if v==num{
+            fmt.Println(num,"found at index",i,"in",nums)
+            found=true
+        }
+    }
+    if !found{
+        fmt.Println(num,"not found in",nums)
+    }
+    fmt.Printf("\n")
+}
+func main(){
+    nums:=[]int{89,90,95}
+    find(89,nums)
+}
+```
+
+在这种情况下，会抛出错误，因为函数要求传递的是可变参数类型，并不是需要切片类型。
+
+当然也有一种方法可以实现对可变参数类型传入切片类型，具体做法如下：
+
+**有一个可以直接将切片传入可变参数函数的语法糖，即在切片后加...后缀，这样，切片将直接传入函数，不再创建新的切片。**
+
+即：
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+func find(num int, nums ...int) {
+    fmt.Printf("type of nums is %T\n", nums)
+    found := false
+    for i, v := range nums {
+        if v == num {
+            fmt.Println(num, "found at index", i, "in", nums)
+            found = true
+        }
+    }
+    if !found {
+        fmt.Println(num, "not found in ", nums)
+    }
+    fmt.Printf("\n")
+}
+func main() {
+    nums := []int{89, 90, 95}
+    find(89, nums...)
+}
+```
+
+## 10.3 不直观错误
+
+例：
+
+```go
+package main
+import "fmt"
+func change(s ...string){
+    s[0]="Go"
+}
+func main(){
+    welcome:=[]string{"hello","world"}
+    change(welcome...)
+    fmt.Println(welcome)
+}
+```
+
+你认为这段代码将输出什么呢？如果你认为它输出 `[Go world]` 。恭喜你！你已经理解了可变参数函数和切片。如果你猜错了，那也不要紧，让我来解释下为什么会有这样的输出。
+
+在第 13 行，我们使用了语法糖 `...` 并且将切片作为可变参数传入 `change` 函数。
+
+正如前面我们所讨论的，如果使用了 `...` ，`welcome` 切片本身会作为参数直接传入，不需要再创建一个新的切片。这样参数 `welcome` 将作为参数传入 `change` 函数
+
+在 `change` 函数中，切片的第一个元素被替换成 `Go`，这样程序产生了下面的输出值
+
+```
+[Go world]
+```
+
