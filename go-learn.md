@@ -2061,3 +2061,268 @@ func main(){
 [Go world]
 ```
 
+# 11.Maps
+
+map是在go中将值（value）与键（key）关联的内置类型。通过相应的键可以以获取到值。
+
+## 11.1 如何创建map
+
+通过向make函数传入键和值得类型，可以创建map。`make(map[type of key]type of value)`是创建map的语法。
+
+```go
+personSalary:=make(map[string]int)
+```
+
+上述代码创建一个名为personSalary的map，其中键是string类型，而值是int类型。
+
+map的零值是nil，如果你想添加元素到nil map中，会触发运行时panic，因此map必须使用make函数初始化。
+
+```go
+package main
+import "fmt"
+
+func main(){
+    var personSalary map[string]int
+    if personSalary==nil{
+        fmt.Println("map is nil.Going to make one.")
+        personSalary=make(map[string]int)
+    }
+}
+```
+
+上述程序中，personSalary是nil，因此需要使用make方法初始化，程序将输出`map is nil.Going to make one`。
+
+## 11.2给map添加元素
+
+给map添加新元素的语法和数组相同。下面的程序给personSalary map添加几个新元素。
+
+```go
+package main
+import "fmt"
+func main(){
+    personSalary:=make(map[string]int)
+    personSalary["steve"]=1200
+    personSalary["jamie"]=15000
+    personSalary["mike"]=9000
+    fmt.Println("personSalary map contents:",personSalary)
+}
+```
+
+
+
+同时，也可以在声明的时候初始化map。
+
+```go
+package main
+import "fmt"
+func main(){
+    personSalary:=map[string]int{
+        "steve":12000,
+        "jamie":15000,
+    }
+    personSalary["mike"]=9000
+    fmt.Println("personSalary map contents:",personSalary)
+}
+```
+
+上述程序在声明的同时添加了两个元素，之后又添加了mike。
+
+## 10.3 获取map中的元素
+
+目前我们已经给map添加了几个元素，获取map元素的语法是map[key]。
+
+```go
+package main
+import "fmt"
+func main(){
+    personSalary:=map[string]int{
+        "steve":12000,
+        "jamie":15000,
+    }
+    personSalary["mike"]=9000
+    employee:="jamie"
+    fmt.Println("Salary of",employee,"is",personSalary[employee])
+}
+```
+
+上述程序中，获取并打印员工 jamie的薪资，程序输出`Salary of jamie is 15000`。
+
+当要获取一个不存在的元素时，map会返回该元素类型的零值。在`personSalary`这个map里，如果我们获取一个不存在的元素，会返回int类型的零值0.
+
+```go
+package main
+import "fmt"
+func main(){
+    personSalary:==map[string]int{
+        "steve":12000,
+        "jamie":15000,
+    }
+    personSalary["mike"]=9000
+    employee:="jamie"
+    fmt.Println("Salary of ",employee,"is",personSalary[employee])
+    fmt.Println("Salary of joe is",personSalary["joe"])
+}
+```
+
+程序输出为：
+
+```
+Salary of jamie is 15000
+Salary of joe is 0
+```
+
+上面程序返回`joe`的薪资是0，`personSalary`中不包含`joe`的情况下我们不会获取到任何运行时错误。如果我们想知道map中到底是不是存在这个`key`,该怎么做
+
+```go
+value,ok:=map[key]
+```
+
+上述就是获取map中某个key是否存在的语法，如果ok是true，表示key存在，key对应的值就是value，反之表示key不存在。
+
+```go
+package main
+import "fmt"
+func main(){
+    personSalary:=map[string]int{
+        "steve":12000,
+        "jamie":15000,
+    }
+    personSalary["mike"]=9000
+    newEmp:="joe"
+    value,ok:=personSalary[newEmp]
+    if ok==true{
+        fmt.Println("Salary of",newEmp,"is",value)
+    }else{
+        fmt.Println(newEmp,"not found")
+    }
+}
+```
+
+程序输出：
+
+```
+joe not found
+```
+
+遍历map中所有的元素需要用`for range`循环
+
+```go
+package main
+import "fmt"
+func main(){
+    personSalary:=map[string]int{
+        "steve":12000,
+        "jamie":15000,
+    }
+    personSalary["mike"]=9000
+    fmt.Println("All items of a map")
+    for key,value:=range personSalary{
+        fmt.Printf("personSalary[%s]=%d\n",key,value)
+    }
+}
+```
+
+程序输出：
+
+```
+All items of a map
+personSalary[mike] = 9000
+personSalary[steve] = 12000
+personSalary[jamie] = 15000
+```
+
+**有一点很重要，当使用`for range`遍历map时，不保证每次执行程序获取的元素顺序相同。**
+
+## 10.4 删除map中的元素
+
+删除`map`中`key`的语法是`delete(map,key)`。此函数没有返回值。
+
+```go
+package main
+import "fmt"
+func main(){
+    personSalary:=map[string]int{
+        "steve":12000,
+        "jamie":15000,
+    }
+    personSalary["mike"]=9000
+    fmt.Println("map before deletion",personSalary)
+    delete(personSalary,"steve")
+    fmt.Println("map after deletion",personSalary)
+}
+```
+
+上述程序输出：
+
+```
+map before deletion map[steve:12000 jamie:15000 mike:9000]
+map after deletion map[mike:9000 jamie:15000]
+```
+
+## 10.5 获取map的长度
+
+获取map的长度使用`len()`函数
+
+```go
+package main
+import "fmt"
+func main(){
+    personSalary:=map[string]int{
+        "steve":12000,
+        "jamie":15000,
+    }
+    personSalary["mike"]=9000
+    fmt.Println("length is",len(personSalary))
+}
+```
+
+上述程序的输出是，`length is 3`
+
+## 10.6 map是引用类型
+
+和slice类似，map也是引用类型，当map被赋值为一个新变量时，他们指向同一个内部数据结构。因此改变其中一个变量，会影响到另一个变量。
+
+```go
+package main
+import "fmt"
+func main(){
+    personSalary:=map[string]int{
+        "steve":12000,
+        "jamie":15000,
+    }
+    personSalary["mike"]=9000
+    fmt.Println("Original person salary",personSalary)
+    newPersonSalary:=personSalary
+    newPersonSalary["mike"]=18000
+    fmt.Println("Person salary changed",personSalary)
+}
+```
+
+输出为：
+
+```
+Original person salary map[steve:12000 jamie:15000 mike:9000]
+Person salary changed map[steve:12000 jamie:15000 mike:18000]
+```
+
+## 10.7 map的相等性
+
+map之间不能用==来判断相等，==只能用来检查map是否为nil。
+
+```go
+package main
+func main(){
+    map1:=map[string]int{
+        "one":1,
+        "two":2,
+    }
+    map2:=map1
+    if map1==map2{
+        
+    }
+}
+```
+
+上面程序抛出编译错误 **invalid operation: map1 == map2 (map can only be compared to nil)**。
+
+判断两个 map 是否相等的方法是遍历比较两个 map 中的每个元素。
