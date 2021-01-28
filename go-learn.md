@@ -2326,3 +2326,908 @@ func main(){
 上面程序抛出编译错误 **invalid operation: map1 == map2 (map can only be compared to nil)**。
 
 判断两个 map 是否相等的方法是遍历比较两个 map 中的每个元素。
+
+# 12.字符串
+
+## 12.1 什么是字符串
+
+go语言中的字符串是一个字节切片，把内容放在双引号“”之间，我们可以创建一个字符串。让我们来看一个创建并打印字符串的简单示例。
+
+```go
+package main
+import "fmt"
+func main(){
+    name:="Hello World"
+    fmt.Println(name)
+}
+```
+
+上述程序会输出Hello World
+
+## 12.2 单独获取字符串的每一个字节
+
+由于字符串是一个字节切片，所以我们可以获取字符串的每一个字节。
+
+```go
+package main
+import "fmt"
+func printBytes(s string){
+    for i:=0;i<len(s);i++{
+        fmt.Printf("%x",s[i])
+    }
+}
+func main(){
+    name:="Hello World"
+    printBytes(name)
+}
+```
+
+上述程序中，`len(s)`返回字符串中字节的数量，然后我们用了一个for循环以16进制的形式打印这些字节。`%x`格式限定符用于指定16进制编码。上面的程序输出是`48 65 6c 6c 6f 20 57 6f 72 6c 64`。这些打印出来的字符是“hello world”以Unicode UTF-8编码的结果。
+
+修改上述程序，让它打印字符串的每一个字符。
+
+```go
+package main
+import "fmt"
+func printBytes(s string){
+    for i:=0;i<len(s);i++{
+        fmt.Printf("%x",s[i])
+    }
+}
+func printChars(s string){
+    for i:=0;i<len(s);i++{
+        fmt.Printf("%c",s[i])
+    }
+}
+func main(){
+    name:="Hello World"
+    printBytes(name)
+    fmt.Printf("\n")
+    printChars(name)
+}
+```
+
+其中`%c`格式限定符用于打印字符串的字符，输出为：
+
+```
+48 65 6c 6c 6f 20 57 6f 72 6c 64  
+H e l l o   W o r l d
+```
+
+## 12.3 rune
+
+rune 是go语言的内建类型，它也是int32的别称，在go语言中，rune表示一个代码点。代码点无论占用多少个字节，都可以用一个rune来表示。让我们修改上述程序，用rune来打印字符。
+
+```go
+package main
+import "fmt"
+func printBytes(s string){
+    for i:=0;i<len(s);i++{
+        fmt.Printf("%x",s[i])
+    }
+}
+func printChars(s string){
+    runes:=[]rune(s)
+    for i:=0;i<len(runes);i++{
+        fmt.Printf("%c",runes[i])
+    }
+}
+func main(){
+    name:="Hello World"
+    printBytes(name)
+    fmt.Printf("\n")
+    printChars(name)
+    fmt.Printf("\n\n")
+    name="Señor"
+    printBytes(name)
+    fmt.Printf("\n")
+    printChars(name)
+}
+```
+
+在上述代码中，字符串被转化为一个rune切片，然后我们循环打印字符，输出结果是：
+
+```
+48 65 6c 6c 6f 20 57 6f 72 6c 64  
+H e l l o   W o r l d 
+
+53 65 c3 b1 6f 72  
+S e ñ o r
+```
+
+## 12.4 字符串的for range循环
+
+上面的程序是一种遍历字符串的好方法，但是go给我们提供了一种更简单的方法来实现，使用for range循环。
+
+```go
+package main
+import "fmt"
+
+func printCharsAndBytes(s string){
+    for index,rune:=range s{
+        fmt.Printf("%c starts at byte %d\n",rune,index)
+    }
+}
+func main(){
+    name"Señor"
+    printCharsAndBytes(name)
+}
+```
+
+使用`for range`遍历了字符串，循环返回的是当前rune的字节位置，输出为：
+
+```
+S starts at byte 0  
+e starts at byte 1  
+ñ starts at byte 2
+o starts at byte 4  
+r starts at byte 5
+```
+
+## 12.5用字节切片构造字符串
+
+```go
+package main
+import "fmt"
+func main(){
+    byteSlice:=[]byte{0x43, 0x61, 0x66, 0xC3, 0xA9}
+    str:=string(byteSlice)
+    fmt.Println(str)
+}
+```
+
+在上面的程序中 `runeSlice` 包含字符串 `Señor`的 16 进制的 Unicode 代码点。这个程序将会输出`Señor`。
+
+## 12.6 字符串的长度
+
+[utf8 package](https://golang.org/pkg/unicode/utf8/#RuneCountInString) 包中的 `func RuneCountInString(s string) (n int)` 方法用来获取字符串的长度。这个方法传入一个字符串参数然后返回字符串中的 rune 的数量。
+
+```go
+package main
+import (
+	"fmt"
+	"unicode/utf8"
+	)
+func length(s string){
+    fmt.Printf("lenght of %s is %d\n",s,utf8.RuneCountInString(s))
+}
+func main(){
+    word1"Señor"
+    length(word1)
+    word2:="Pets"
+    length(word2)
+}
+```
+
+输出结果为：
+
+```
+length of Señor is 5  
+length of Pets is 4
+```
+
+## 12.7 字符串是不可变的
+
+为了修改字符串，我们需要把其转化为一个rune切片，对这个切片进行更改，之后再转化为一个字符串。
+
+```go
+package main
+import "fmt"
+func mutate(s []rune)string{
+    s[0]='a'
+    return string(s)
+}
+func main(){
+    h:="hello"
+    fmt.Println(mutate([]rune(h)))
+}
+```
+
+`utate` 函数接收一个 rune 切片参数，它将切片的第一个元素修改为 `'a'`，然后将 rune 切片转化为字符串，并返回该字符串。程序的第 13 行调用了该函数。我们把 `h` 转化为一个 rune 切片，并传递给了 `mutate`。这个程序输出 `aello`。
+
+# 13.指针
+
+指针是一种存储内存地址的变量。
+
+## 13.1指针的声明
+
+指针变量的类型为***T**，该指针指向一个**T**类型的变量。
+
+```go
+package main
+import "fmt"
+func main(){
+    b:=255
+    var a *int=&b
+    fmt.Printf("Type of a is %T\n",a)
+    fmt.Printf("address of b is",a)
+}
+```
+
+**&**操作符用于获取变量的地址，上述程序中我们把**b**的地址赋值为***int**类型的**a**。我们称**a**指向了**b**。当我们打印**a**的值时，会打印**b**的地址。
+
+```
+Type of a is *int  
+address of b is 0x1040a124
+```
+
+由于b可能在内存中所处的位置不同，我们会得到不同的地址。
+
+## 13.2指针的零值
+
+指针的零值是nil
+
+```go
+package main
+import "fmt"
+func main(){
+    a:=25
+    var b *int
+    if b==nil{
+        fmt.Println("b is",b)
+        b=&a
+        fmt.Println("b after initialization is",b)
+    }
+}
+```
+
+上述程序中，`b`初始化为`nil`,接着将**a**的地址赋值给b，则程序会输出：
+
+```
+b is <nil>  
+b after initialisation is 0x1040a124
+```
+
+## 13.3 指针的解引用
+
+指针的解引用可以获取指针所指向的变量的值。将`a`解引用的语法是`*a`
+
+```go
+package main
+import "fmt"
+func main(){
+    b:=255
+    a:=&b
+    fmt.Println("address of b is",a)
+    fmt.Println("value of b is",*a)
+}
+```
+
+上述程序的结果是：
+
+```
+address of b is 0x1040a124  
+value of b is 255
+```
+
+下面我们通过指针来修改b的值
+
+```go
+package main
+import "fmt"
+func main(){
+    b:=255
+    a:=&b
+    fmt.Println("address of b is",a)
+    fmt.Println("value of b is",*a)
+    *a++
+    fmt.Println("new value of b is",b)
+}
+```
+
+我们把 `a` 指向的值加 1，由于 `a` 指向了 `b`，因此 `b` 的值也发生了同样的改变。于是 `b` 的值变为 256。程序会输出：
+
+```
+address of b is 0x1040a124  
+value of b is 255  
+new value of b is 256
+```
+
+## 13.4 向函数传递指针参数
+
+```go
+package main
+import "fmt"
+func change(val *int){
+    *val=55
+}
+func main(){
+    a:=58
+    fmt.Println("value of a before function call is",a)
+    b:=&a
+    change(b)
+    fmt.Println("value of a after function call is",a)
+}
+```
+
+在上述程序中，我们向函数`change`传递了指针变量`b`,而`b`存储了`a`的地址。而在`change`函数中，通过解引用修改了a的值，则程序输出：
+
+```
+value of a before function call is 58  
+value of a after function call is 55
+```
+
+## 13.5 不要向函数传递数组的指针，而应该是使用切片
+
+假如我们想要在函数内修改一个数组，并希望调用函数的地方也能得到修改后的数组，一种解决方案是把一个指向数组的指针传递给这个函数。
+
+```go
+package main
+import "fmt"
+func modify(arr *[3]int){
+    (*arr)[0]=90
+   
+}
+func main(){
+    a:=[3]int{89,90,91}
+    modify(&a)
+    fmt.Println(a)
+}
+```
+
+在上述程序中，我们将数组的地址传递给了modify函数，通过将arr解引用，重新给它赋值。
+
+**`a[x]` 是 `(\*a)[x]` 的简写形式，因此上面代码中的 `(\*arr)[0]` 可以替换为 `arr[0]`**。下面我们用简写形式重写以上代码。
+
+```go
+package main
+import "fmt"
+func modify(arr *[3]int){
+    arr[0]=90
+}
+func main(){
+    a:=[3]int{89,90,91}
+    modify(&a)
+    fmt.Println(a)
+}
+```
+
+该程序也会输出[90 90 91]
+
+**这种方式向函数传递一个数组指针参数，并在函数内修改数组。尽管它是有效的，但却不是go语言惯用的实现方式，我们最好使用切片来处理。
+
+使用切片重写代码
+
+```go
+package main
+import "fmt"
+func modify(sls []int){
+    sls[0]=90
+}
+func main(){
+    a:=[3]int{89,90,91}
+    modify(a[:])
+    fmt.Println(a)
+}
+```
+
+我们将一个切片传递给了 `modify` 函数。在 `modify` 函数中，我们把切片的第一个元素修改为 `90`。程序也会输出 `[90 90 91]`。**所以别再传递数组指针了，而是使用切片吧**。
+
+## 13.6 go不支持指针运算
+
+```go
+package main
+
+func main() {  
+    b := [...]int{109, 110, 111}
+    p := &b
+    p++
+}
+```
+
+上述程序会抛出错误。
+
+# 14.结构体
+
+## 14.1 什么是结构体
+
+结构体是用户定义的类型，表示若干个字段（field）的集合。有时应该把数据整合在一起，而不是让这些数据没有联系。这种情况下可以使用结构体。
+
+例：一个职员有`firstName`、`lastName`和`age`三个属性，而把这些属性组合在一起形成一个结构体employee中就很合理。
+
+## 14.2 结构体的声明
+
+```go
+type Employee struct{
+    firstName string
+    lastName  string
+    age       int
+}
+```
+
+在上述代码中，声明了一个结构体类型`Employee`,它有`firstName`、`lastName`和`age`三个字段，通过把相同类型的字段声明在同一行，结构体可以变得更加紧凑，在上面的结构体中，`firstName`、和`lastName`属于相同的`string`类型，于是这个结构体可以重写为：
+
+```go
+type Employee struct{
+    firstName,lastName string
+    age,salary         int
+}
+```
+
+上述的结构体称为命名的结构体。我们创建了名为Employee的新类型，而它可以用于创建`Employee`类型的结构体变量。
+
+声明结构体时也可以不用声明一个新类型，这样的结构体类型称为**匿名结构体**
+
+```go
+var employee struct{
+    firstName,lastName string
+    age                int
+}
+```
+
+上述代码片段创建了一个**匿名结构体**
+
+## 14.3 创建命名的结构体
+
+通过以下代码示例，我们去定义一个**命名的结构体**
+
+```go
+package main
+import "fmt"
+
+type Employee struct{
+    firstName,lastName string
+    age,salary         int
+}
+func main(){
+    emp1:=Employee{
+        firstName:"Sam",
+        age      :25,
+        salary   :500,
+        lastName :"Anderson"
+    }
+    emp2:=Employee{"Thomas","Paul",29,800}
+    fmt.Println("Employee 1",emp1)
+    fmt.Println("Employee 2",emp2)
+}
+```
+
+我们创建了一个命名的结构体 `Employee`。而在第 15 行，通过指定每个字段名的值，我们定义了结构体变量 `emp1`。字段名的顺序不一定要与声明结构体类型时的顺序相同。在这里，我们改变了 `lastName` 的位置，将其移到了末尾。这样做也不会有任何的问题。
+
+在上面程序的第 23 行，定义 `emp2` 时我们省略了字段名。在这种情况下，就需要保证字段名的顺序与声明结构体时的顺序相同。
+
+程序输出为：
+
+```
+Employee 1 {Sam Anderson 25 500}
+Employee 2 {Thomas Paul 29 800}
+```
+
+
+
+## 14.4 创建匿名结构体
+
+```go
+package main
+import "fmt"
+func main(){
+    emp3:=struct{
+        firstName,lastName string
+        age,salary         int
+    }{
+        firstName:"Andreah",
+        lastName:"Nikola",
+        age:    :31,
+        salary  :5000,
+    }
+    fmt.Println("Employee 3",emp3)
+}
+```
+
+在上述程序中，我们定义了一个**匿名结构体变量**`emp3`。这里只创建了一个新的结构体变量，而没有定义任何类型。
+
+程序输出为：
+
+```
+Employee 3 {Andreah Nikola 31 5000}
+```
+
+## 14.5 结构体的零值
+
+当定义好的结构体并没有被显式地初始化时，该结构体的字段将默认赋值为零。
+
+```go
+package main
+import "fmt"
+type Employee struct{
+    firstName,lastName string
+    age,salary         int
+}
+func main(){
+    var emp4 Employee
+    fmt.Println("Employee 4",emp4)
+}
+```
+
+上述程序定义了`emp4`,却没有进行初始化，因此，`firstName`和`lastName`赋值为string的零值（“”）。而`age`和`salary`赋值为int的零值0，则程序的输出为：
+
+```
+Employee 4 { 0 0}
+```
+
+当然也存在一种情况，结构体中的某些字段被赋予了初始值，有些字段并没有赋予。这些忽略的字段则会被赋值为零。
+
+```go
+package main
+import "fmt"
+type Employee struct{
+    firstName,lastName string
+    age,salary         int
+}
+func main(){
+    emp5:=Employee{
+        firstName:"John",
+        lastName:"Paul"
+    }
+    fmt.Println("Employee 5",emp5)
+}
+```
+
+在上述程序中，我们初始化了`firstName`和`lastName`,而`age`和`salary`没有进行初始化。因此`age`和`salary`赋值为零值。该程序的输出：
+
+```
+Employee 5 {John Paul 0 0}
+```
+
+## 14.6 访问结构体的字段
+
+点操作符`.`用于访问结构体的字段。
+
+```go
+package main
+import "fmt"
+
+type Employee struct{
+    firstName,lastName string
+    age,salary         int
+}
+func main(){
+    emp6:=Employee{"Sam","Anderson",55,6000}
+    fmt.Println("First Name:",emp6.firstName)
+    fmt.Println("Last Name:",emp6.lastName)
+    fmt.Println("Age:",emp6.age)
+    fmt.Printf("Salary $%d",emp6.salary)
+}
+```
+
+上述程序中**emp6.firstName**访问了结构体emp6的字段firstName，该程序的输出：
+
+```
+First Name: Sam  
+Last Name: Anderson  
+Age: 55  
+Salary: $6000
+```
+
+还可以创建零值的`struct`,以后再给每个字段赋值。
+
+```go
+package main
+import "fmt"
+
+type Employee struct{
+    firstName,lastName string
+    age,salary         int
+}
+func main(){
+    var emp7 Employee
+    emp7.firstName="Jack"
+    emp7.lastName="Adams"
+    fmt.Println("Employee 7:",emp7)
+}
+```
+
+在上述程序中，我们定义了`emp7`,接着给`firstName`和`lastName`赋值，则该程序输出：
+
+```
+Employee 7: {Jack Adams 0 0}
+```
+
+## 14.7 结构体的指针
+
+我们也可以创建指向结构体的指针。
+
+```go
+package main
+import "fmt"
+
+type Employee struct{
+    firstName,lastName string
+    age,salary         int
+}
+func main(){
+    emp8:=&Employee{"Sam","Anderson",55,6000}
+    fmt.Println("First Name:",(*emp8).firstName)
+    fmt.Println("Age:",(*emp8).age)
+}
+```
+
+在上述程序中，emp8是一个指向结构体`Employee`的指针。`(*emp8).firstName`表示访问结构体`emp8`的`firstName`字段。输出为：
+
+```
+First Name: Sam
+Age: 55
+```
+
+**go语言允许我们在访问firstName字段时，可以使用`emp8.firstName`来代替显式地解引用`(*emp8).firstName`
+
+```go
+package main
+import "fmt"
+
+type Employee struct{
+    firstName,lastName string
+    age,salary         int
+}
+func main(){
+    emp8:=&Employee{"Sam","Anderson",55,6000}
+    fmt.Println("First Name:",emp8.firstName)
+    fmt.Println("Age:",emp8.age)
+}
+```
+
+在上述程序中，我们使用`emp8.firstName`来访问`firstName`字段，输出：
+
+```
+First Name: Sam
+Age: 55
+```
+
+## 14.8 匿名字段
+
+当我们创建结构体时，字段可以只有类型，而没有字段名。这样的字段称为匿名字段
+
+以下代码创建一个Person结构体，它含有两个匿名字段string和int。
+
+```go
+type Person struct{
+    string
+    int
+}
+```
+
+利用匿名字段来编写一段程序。
+
+```go
+package main
+import "fmt"
+type Person struct{
+    string
+    int
+}
+func main(){
+    p:=Person{"Naveen",50}
+    fmt.Println(p)
+}
+```
+
+在上述的程序中，结构体`Person`有两个匿名字段。p:=Person{"Naveen",50}定义了一个`Person`类型的变量。该程序输出`{Naveen 50}`。
+
+**虽然匿名字段没有名称，但其实匿名字段的名称就默认为它的类型**。比如在上面的`Person`结构体里，虽说字段是匿名的，但go默认这些字段名是它们各自的类型。所以`Person`结构体有两个名为string和int的字段。
+
+```go
+package main
+import "fmt"
+type Person struct{
+    string
+    int
+}
+func main(){
+    var p1 Person
+    p1.string="naveen"
+    p1.int=50
+    fmt.Println(p1)
+}
+```
+
+在上述程序中，我们访问了`Person`结构体的匿名字段，我们把字段类型作为字段名，分别为“string”和“int”，输出为：
+
+```
+{naveen 50}
+```
+
+## 14.9 嵌套结构体
+
+结构体的字段也可能是另一个结构体，这样的结构体称为嵌套结构体。
+
+```go
+package main
+import "fmt"
+
+type Address struct{
+    city,state string
+}
+type Person struct{
+    name string
+    age int
+    address Address
+}
+func main(){
+    var p Person
+    p.name="Naveen"
+    p.age=50
+    p.address=Address{
+        city:"Chicago",
+        state:"Illinois"
+    }
+    fmt.Println("Name:"p.name)
+    fmt.Println("Age:",p.age)
+    fmt.Println("City:",p.address.city)
+    fmt.Println("State:",p.address.state)
+}
+```
+
+上述结构体`Person`有一个字段`address`,而`address`也是结构体，该程序输出：
+
+```
+Name: Naveen  
+Age: 50  
+City: Chicago  
+State: Illinois
+```
+
+## 14.10 提升字段
+
+如果是结构体中有匿名的结构体类型字段，该匿名结构体里的字段就称为提升字段。这是因为提升字段就像是属于外部结构体一样，可以用外部结构体直接访问。下面我们通过代码来理解。
+
+```go
+type Address struct{
+    city,state string
+}
+type Person struct{
+    name string
+    age int
+    Address
+}
+```
+
+在上述代码中，Person结构体中有一个匿名字段Address，而Address是一个结构体，现在结构体Address有city和state两个字段，访问这两个字段就像在Person里直接声明的一样。我们称之为提升字段。
+
+```go
+package main
+import "fmt"
+
+type Address struct{
+    city,state string
+}
+type Person struct{
+    name string
+    age  int
+    Address
+}
+
+func main(){
+    var p Person
+    p.name="Naveen"
+    p.age=50
+    p.Address=Address{
+        city:"Chicago",
+        state:"Illinois"
+    }
+    fmt.Println("Name:",P.name)
+    fmt.Println("Age:",p.age)
+    fmt.Println("City",p.city)
+    fmt.Println("State",p.state)
+}
+```
+
+在上述代码中，我们使用了语法`p.city`和`p.state`,访问提升字段`city`和`state`就像它们是在结构体`p`中声明的一样。该程序输出：
+
+```
+Name: Naveen  
+Age: 50  
+City: Chicago  
+State: Illinois
+```
+
+## 14.11 导出结构体和字段
+
+如果结构体名称以大写字母开头，则它是其他包可以访问的导出类型。同样，如果结构体里的字段首字母大写。它也能被其他包访问到。下面我们通过一个示例来更好的理解。
+
+在go工作区的src目录中，创建一个名为`struct`的文件夹，另外在`struct`文件夹中在创建一个目录`computer`.
+
+在computer目录中，在名为spec.go的文件中保存下面的程序。
+
+```go
+package computer
+type Spec struct{
+    Maker string
+    model string
+    Price int
+}
+```
+
+上述代码片段中，创建了一个computer包，里面有一个导出结构体类型Spec。Spec有两个导出字段Maker和Price，和一个未导出的字段model，接下来我们会在main包中导入这个包，并使用Spec结构体。
+
+```go
+package main
+import "struct/computer"
+import "fmt"
+func main(){
+    var spce computer.Spec
+    spec.Maker="apple"
+    spec.Price=50000
+    fmt.Println("Spec:",spec)
+}
+```
+
+包结构如下所示：
+
+```
+src  
+   structs
+        computer
+            spec.go
+        main.go
+```
+
+在上述程序中，我们导入了`computer`包，之后我们访问结构体`Spec`的两个导出字段`Maker`和`Price`。执行命令`go install struct`和`workspacepath/bin/struct`,运行该程序。
+
+如果我们试图访问未导出的字段`model`,编译器会报错。
+
+## 14.12 结构体相等性
+
+** 结构体是值类型。如果它的每一个字段都是可比较的，则该结构体也是可比较的。如果两个结构体变量的对应字段相等，则这两个变量也是相等的。
+
+```go
+package main
+import "fmt"
+
+type name struct{
+    firstName string
+    lastName string
+}
+
+func main(){
+    name1:=name{"Steve","Jobs"}
+    name2:=name{"Steve","Jobs"}
+    if name1==name2{
+        fmt.Println("name1 and name2 are equal")
+    }else{
+        fmt.Println("name1 and name2 are not equal")
+    }
+    name3:=name{firstName:"Steve",lastName:"Jobs"}
+    name4:=name{}
+    name4.firstName="Steve"
+    if name3==name4{
+        fmt.Println("name3 and name4 are equal")
+    }else{
+        fmt.Println("name3 and name4 are not equal")
+    }
+    
+}
+```
+
+在上述代码中，结构体类型`name`包含两个`string`类型，由于字符是可比较的，因此可以比较两个结构体变量。
+
+则输出：
+
+```
+name1 and name2 are equal  
+name3 and name4 are not equal
+```
+
+**如果结构体包含不可比较的字段，则结构体变量也不可比较**
+
+```go
+package main
+import "fmt"
+type image struct{
+    data map[int]int
+}
+
+func main(){
+    image1:=image{data:map[int]int{
+        0:255,
+    }}
+    image2:=image{data:map[int]int{
+        0:155,
+    }}
+    if image1==image2{
+        fmt.Println("image1 and image2 are equal")
+    }
+}
+```
+
+在上述代码中，结构体类型`image`包含一个`map`类型的字段。由于`map`类型不可比较，因此两个结构体也不能进行比较。
+
