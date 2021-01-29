@@ -3231,3 +3231,280 @@ func main(){
 
 在上述代码中，结构体类型`image`包含一个`map`类型的字段。由于`map`类型不可比较，因此两个结构体也不能进行比较。
 
+# 15.方法
+
+## 15.1 什么是方法
+
+方法其实就是一个函数，在func这个关键字和方法名中间加入了一个特殊的接收器类型。接收器可以是结构体类型或者是非结构体类型。接收器是可以在方法的内部访问的。
+
+语法：
+
+```go
+func(t Type)methodName(parameter list){
+    
+}
+```
+
+上面的代码创建了一个接收器类型为Type的方法`methodName`。
+
+**示例**
+
+```go
+package main
+import "fmt"
+type Employee struct{
+    name string
+    salary int
+    currency string
+}
+
+func (e Employee)displaySalary(){
+    fmt.Printf("salary of %s is %s%d",e.name,e.currency,e.salary)
+}
+func main(){
+    emp1:=Employee{
+        name:"Sam Adolf",
+        salary:5000,
+        currency:"$",
+    }
+    emp1.displaySalary()
+}
+```
+
+在上述程序中，我们在`Employee`结构体类型中创建了一个`displaySalary`方法。displaySalary（）方法在方法的内部访问了接收器`e Employee`。我们使用接收器`e`，并打印employee的name、currency和salary三个字段。
+
+## 15.2 为什么需要方法
+
+在下述函数中，我们只使用函数，不使用方法。
+
+```go
+package main
+import "fmt"
+type Employee struct{
+    name string
+    salary int
+    currency string
+}
+
+func displaySalary(e Employee){
+    fmt.Printf("Salary of %s is %s%d",e.name,e.currency,e.salary)
+}
+func main(){
+    emp1:=Employee{
+        name:"Sam Adolf",
+        salary:5000,
+        currency:"$",
+    }
+    displaySalary(emp1)
+}
+```
+
+在上述程序中，`displaySalary`方法被转化为一个函数，`Employee`结构体被当做参数传递，输出同样的结果。
+
+既然能够利用函数得到同样的结果，那我们为什么需要方法呢？
+
+1. **go语言不是纯粹的面向对象的编程语言，**而且go不支持类，因此，基于类型的方法是一种实现和类相似行为的途径。
+2. 相同的名字的方法可以定义在不同的类型上，而相同名字的函数时不被允许的，假设我们有一个`Square`和`Circle`结构体，可以在`Square`和`Circle`上分别定义一个`Area`方法。
+
+```go
+package main
+import "fmt"
+import "math"
+
+type Rectangle struct{
+    length int
+    width  int
+}
+type Circle struct{
+    radius float64
+}
+func (r Rectangle)Area()int{
+    return r.length*r.width
+}
+func (c Circle)Area()float64{
+    return math.Pi*c.radius*c.radius
+}
+
+func main(){
+    r:=Rectangle{
+        length:10,
+        width:5,
+    }
+    fmt.Printf("Area of rectangle %d\n",r.Area())
+    c:=Circle{
+        radius:12,
+    }
+    fmt.Printf("Area of circle %f",c.Area())
+}
+```
+
+输出结果:
+
+```GO
+Area of rectangle 50
+Area of circle 452.389342
+```
+
+## 15.3 指针接收器与值接收器
+
+除了可以使用值接收器的方法外，我们还可以创建指针接收器。两者的区别在于，指针接收器的方法内部的改变对于调用者是可见的，然而值接收器不可见。
+
+```go
+package main
+import "fmt"
+type Employee struct{
+    name string
+    age  int
+}
+//使用值接收器
+func (e Employee)changeName(newName string){
+    e.name=newName
+}
+
+//使用指针接收器
+func (e *Employee)changeAge(newAge int){
+    e.age=newAge
+}
+
+func main(){
+    e:=Employee{
+        name:"Mark Andrew",
+        age:50,
+    }
+    fmt.Printf("Employee name before change %s",e.name)
+    e.changeName("Michael Andrew")
+    fmt.Printf("\nEmployee name ager change:%d",e.age)
+    (&e).changeAge(51)
+    fmt.Printf("\nEmployee age after change %d",e.age)
+}
+```
+
+在上述程序中，`changeName`方法有一个值接收器`(e Employee)`,而`changeAge`方法有一个指针接收器`(e *Employee)`。在`changeName`方法中对`Employee`结构体的字段`name`所做的改变对调用者是不可见的，因此程序在调用`e.changeName("Michael Andrew")`这个方法的前后打印出相同的名字。由于`changeAge`方法是使用指针(e *Employee)接收器的，所以在调用`(&e).changeAge(51)`方法对age字段做出的改变对调用者是可见的。
+
+输出为：
+
+```
+Employee name before change: Mark Andrew
+Employee name after change: Mark Andrew
+
+Employee age before change: 50
+Employee age after change: 51
+```
+
+在上述程序中，我们使用`(&e).changeAge(51)`来调用changeAge方法，由于changeAge方法有一个指针接收器，所以我们使用&e来调用这个方法。其实，我们也可以直接通过e.changeAge（51）。
+
+重写程序：
+
+```go
+package main
+import "fmt"
+
+type Employee struct{
+    name string
+    age  int
+}
+//使用值接收器的方法
+func (e Employee)changeName(newName string){
+    e.name=newName
+}
+//使用指针接收器
+func (e *Employee)changeAge(newAge int){
+   e.age=newAge 
+}
+
+func main(){
+    e:=Employee{
+        name:"Mark Andrew",
+        age:50,
+    }
+    fmt.Printf("Employee name before change:%s",e.name)
+    e.changeName("Michael Andrew")
+    fmt.Printf("\nEmployee name after change:%s",e.name)
+    fmt.Printf("\n\nEmployee age before change:%d",e.age)
+    e.changeAge(51)
+    fmt.Printf("\nEmployee age after change %d",e.age)
+}
+```
+
+## 15.4 指针接收器？值接收器？
+
+一般来说，指针接收器可以使用在：**对方法内部的接收器所做的改变应该对调用者可见时。**
+
+指针接收器也可以被使用在如下场景：当拷贝一个结构体的代价过于昂贵时。考虑下一个结构体有很多的字段。在方法内使用这个结构体作为值接收器需要拷贝整个结构体。这是很昂贵的，在这样情况下使用指针接收器，结构体不会被拷贝，只会传递一个指针到方法内部使用。
+
+在其他情况下，值接收器都可以被使用。
+
+## 15.5 匿名字段的方法
+
+数据结构体的匿名字段的方法可以被直接调用，就好像这些方法是数据定义了匿名字段的结构体一样。
+
+```go
+package main
+import "fmt"
+
+type address struct{
+    city string
+    state string
+}
+func(a address)fullAddress(){
+    fmt.Printf("Full address:%s,%s",a.city,a.state)
+}
+type person struct{
+    firstName string
+    lastName string
+    address
+}
+func main(){
+    p:=person{
+        firstName:"Elon",
+        lastName:"Musk",
+        address:address{
+            city:"Los Angeles",
+            state:"California",
+        },
+    }
+    p.fullAddress()
+}
+```
+
+在上述程序中，我们通过使用p.fullAddress()来访问address结构体的fullAddress（）方法，明确的调用p.address,fullAddress()是没有必要的，该程序输出：
+
+```
+Full address: Los Angeles, California
+```
+
+## 15.6 在方法中使用接收器与在函数中使用值参数
+
+当一个函数有一个值参数，它只能接受一个值参数。
+
+当一个方法有一个值接收器，它可以接受值接收器和指针接收器。
+
+下面通过例子来解释：
+
+```go
+package main
+import "fmt"
+type rectangle struct{
+    length int
+    width  int
+}
+func area(r rectangle){
+    fmt.Printf("Area Function result:%d\n",(r.length*r.width))
+}
+func (r rectangle)area(){
+    fmt.Printf("Area Method result:%d\n",(r.length*r.width))
+}
+func main(){
+    r:=rectangle{
+        length:10,
+        width:5,
+    }
+    area(r)
+    r.area()
+    p:=&r
+    p.area()
+}
+```
+
+
+
